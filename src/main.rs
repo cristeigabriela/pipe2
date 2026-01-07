@@ -17,6 +17,15 @@ mod windows_pipe_utils {
     use winapi::um::fileapi::ReadFile;
     use winapi::um::namedpipeapi::PeekNamedPipe;
 
+    /// NOTE(gabriela): it's... fine. The operations before still complete.
+    fn reset_last_err_on_broken_pipe() {
+        unsafe {
+            if GetLastError() == ERROR_BROKEN_PIPE {
+                SetLastError(ERROR_SUCCESS);
+            }
+        }
+    }
+
     pub fn can_read<R: AsRawHandle>(pipe: &R) -> io::Result<bool> {
         let handle = pipe.as_raw_handle();
         let mut bytes_avail = 0u32;
@@ -31,12 +40,7 @@ mod windows_pipe_utils {
             )
         };
         if ok != 0 {
-            // NOTE(gabriela): it's... fine.
-            unsafe {
-                if GetLastError() == ERROR_BROKEN_PIPE {
-                    SetLastError(ERROR_SUCCESS);
-                }
-            }
+            reset_last_err_on_broken_pipe();
         }
         Ok(bytes_avail > 0)
     }
@@ -54,7 +58,7 @@ mod windows_pipe_utils {
             )
         };
         if ok == 0 {
-            return Err(io::Error::last_os_error());
+            reset_last_err_on_broken_pipe();
         }
         Ok(read as usize)
     }
