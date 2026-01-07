@@ -21,7 +21,7 @@ TL;DR: it is our responsibility to make sure that, during program execution, we 
 
 ## Solution
 
-Pipe2, using the aforementioned API, works in a loop where it waits for when the pipe has new data available, and only then proceeds to call to the `impl Read` operations. The loop runs until 
+Pipe2, using the aforementioned API, works in a loop where it waits for when the pipe has new data available, and only then proceeds to call to the `impl Read` operations. The loop runs until `child.try_wait()` returns an exit status.
 
 ## Why not just use the blocking API?
 
